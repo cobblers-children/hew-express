@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
+const http = require("http");
+const configure = require("../configure");
+const logger = require("log4js").getLogger("www");
 
 const app = require("../app");
-const debug = require("debug")("hew-express:server");
-const http = require("http");
 
 /**
  * Get port from environment and store in Express.
@@ -65,11 +63,11 @@ function onError(error) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
         case "EACCES":
-            console.error(bind + " requires elevated privileges");
+            logger.error(bind, "    requires elevated privileges");
             process.exit(1);
             break;
         case "EADDRINUSE":
-            console.error(bind + " is already in use");
+            logger.error(bind, "is already in use");
             process.exit(1);
             break;
         default:
@@ -86,5 +84,5 @@ function onListening() {
     var bind = typeof addr === "string"
         ? "pipe " + addr
         : "port " + addr.port;
-    debug("Listening on " + bind);
+    logger.info('Listening on ', bind);
 }
