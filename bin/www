@@ -1,12 +1,36 @@
 #!/usr/bin/env node
 
+const http = require("http");
+const configure = require("../configure");
+const logger = require("log4js").getLogger("www");
+const app = require("../app");
+
 /**
- * Module dependencies.
+ * Top level error handling.
+ * Make sure all unhandled errors get logged properly
  */
 
-const app = require("../app");
-const debug = require("debug")("hew-express:server");
-const http = require("http");
+process.on("unhandledRejection", error => {
+    logger.error(error);
+});
+
+process.on("uncaughtException", error => {
+    logger.error(error);
+    process.exit(1);
+});
+
+process.on("SIGINT", () => {
+    logger.info("Received SIGINT. Shutting down.");
+    process.exitCode = 0;
+
+    server.close(process.exit);
+    setTimeout(process.exit, 4000);
+});
+
+app.use(function (err, req, res, next) {
+    logger.error(err);
+    res.status(500).send("Unexpected server error.");
+});
 
 /**
  * Get port from environment and store in Express.
@@ -65,11 +89,11 @@ function onError(error) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
         case "EACCES":
-            console.error(bind + " requires elevated privileges");
+            logger.error(bind, "    requires elevated privileges");
             process.exit(1);
             break;
         case "EADDRINUSE":
-            console.error(bind + " is already in use");
+            logger.error(bind, "is already in use");
             process.exit(1);
             break;
         default:
@@ -86,5 +110,5 @@ function onListening() {
     var bind = typeof addr === "string"
         ? "pipe " + addr
         : "port " + addr.port;
-    debug("Listening on " + bind);
+    logger.info('Listening on ', bind);
 }
